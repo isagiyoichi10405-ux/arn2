@@ -396,17 +396,75 @@ input:focus {
 #qr-overlay {
   position: fixed;
   inset: 0;
-  background: #000;
+  background: radial-gradient(circle at center, #0a1a2f 0%, #000000 100%);
   z-index: 1000;
+  transition: background 0.5s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+#qr-overlay.is-scanning {
+  background: radial-gradient(circle at center, rgba(0, 242, 255, 0.1) 0%, #000000 100%);
 }
 
 #qr-status {
   position: absolute;
-  top: 40px;
-  width: 100%;
+  top: 60px;
+  width: 90%;
+  padding: 12px;
   text-align: center;
-  font-weight: 600;
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 700;
   color: var(--primary);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  text-shadow: 0 0 15px rgba(0, 242, 255, 0.5);
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
+  border-radius: 12px;
+  border: 1px solid rgba(0, 242, 255, 0.2);
+  z-index: 1100;
+}
+
+.scan-beam {
+  display: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: linear-gradient(to right, transparent, var(--primary), transparent);
+  box-shadow: 0 0 20px var(--primary), 0 0 40px var(--primary);
+  z-index: 1050;
+  opacity: 0.8;
+}
+
+#qr-overlay.is-scanning .scan-beam {
+  display: block;
+  animation: scan 2.5s ease-in-out infinite;
+}
+
+@keyframes scan {
+  0% {
+    top: 15%;
+    opacity: 0;
+  }
+
+  20% {
+    opacity: 1;
+  }
+
+  80% {
+    opacity: 1;
+  }
+
+  100% {
+    top: 85%;
+    opacity: 0;
+  }
 }
 
 /* --- ANIMATIONS --- */

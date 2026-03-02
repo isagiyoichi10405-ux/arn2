@@ -13,6 +13,7 @@ const qrStatus = document.getElementById("qr-status");
 const startScanBtn = document.getElementById("startScanBtn");
 
 function showApp() {
+  qrOverlay.classList.remove("is-scanning");
   qrOverlay.classList.add("hidden");
   appUI.classList.remove("hidden");
   appUI.classList.add("active");
@@ -26,6 +27,7 @@ if (startScanBtn) {
   startScanBtn.onclick = async () => {
     try {
       startScanBtn.classList.add("hidden");
+      qrOverlay.classList.add("is-scanning");
       qrStatus.innerText = "Align QR code with camera";
 
       await scanner.start(
@@ -60,6 +62,7 @@ if (startScanBtn) {
       );
     } catch (err) {
       console.error(err);
+      qrOverlay.classList.remove("is-scanning");
       qrStatus.innerText = "Camera access required";
       startScanBtn.classList.remove("hidden");
     }
