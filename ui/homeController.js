@@ -69,15 +69,44 @@ if (startScanBtn) {
   };
 }
 
-// Quick Destination Chips
+// Full Blocks Selection
+const allBlocksGrid = document.getElementById("all-blocks-grid");
 const destInput = document.getElementById("destinationInput");
-const chips = document.querySelectorAll(".chip");
 
-chips.forEach(chip => {
+const allBlocks = Object.keys(campusCoords).filter(id => {
+  // Filter out Roads and Entry
+  return !id.startsWith("R") && id !== "ENTRY";
+}).sort();
+
+allBlocks.forEach(block => {
+  const btn = document.createElement("button");
+  btn.className = "chip";
+  btn.textContent = block.replace("_", " ");
+  btn.setAttribute("data-id", block);
+  btn.onclick = () => {
+    destInput.value = block;
+    refreshActiveChip(block);
+  };
+  allBlocksGrid.appendChild(btn);
+});
+
+function refreshActiveChip(activeId) {
+  document.querySelectorAll(".chip").forEach(c => {
+    if (c.getAttribute("data-id") === activeId) {
+      c.classList.add("active");
+    } else {
+      c.classList.remove("active");
+    }
+  });
+}
+
+// Quick Destination Chips (existing ones in HTML)
+const quickChips = document.querySelectorAll(".quick-destinations .chip");
+quickChips.forEach(chip => {
   chip.onclick = () => {
-    destInput.value = chip.getAttribute("data-id");
-    chips.forEach(c => c.classList.remove("active"));
-    chip.classList.add("active");
+    const id = chip.getAttribute("data-id");
+    destInput.value = id;
+    refreshActiveChip(id);
   };
 });
 

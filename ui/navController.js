@@ -136,7 +136,7 @@ function createWorldPath() {
       let labelText = id;
       if (id.startsWith("R")) labelText = "ROAD";
       if (i === 0) labelText = "START";
-      if (i === path.length - 1) labelText = "FINISH";
+      if (i === path.length - 1) labelText = id;
 
       const label = makeTextLabel(labelText);
       label.position.set(p.x, p.y + 0.6, p.z);
