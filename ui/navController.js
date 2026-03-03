@@ -333,9 +333,9 @@ function nextStep() {
    UI BUTTONS (INTEGRATED INTO HUD)
 ================================ */
 const nextBtn = document.createElement("button");
-nextBtn.className = "nav-action-btn btn-hud-next";
+nextBtn.className = "btn-hud-next";
 nextBtn.innerHTML = "STEP FORWARD 👣";
-document.querySelector(".nav-card").appendChild(nextBtn);
+document.body.appendChild(nextBtn);
 
 nextBtn.onclick = nextStep;
 
