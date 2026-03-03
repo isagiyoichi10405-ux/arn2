@@ -73,10 +73,39 @@ window.addEventListener("resize", () => {
    3D WORLD ELEMENTS (WORLD AR)
 ================================ */
 const pathGroup = new THREE.Group();
+const labelGroup = new THREE.Group();
 scene.add(pathGroup);
+scene.add(labelGroup);
+
+function makeTextLabel(text) {
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
+  canvas.width = 256;
+  canvas.height = 64;
+
+  ctx.fillStyle = "rgba(0,0,0,0.6)";
+  ctx.roundRect(0, 0, 256, 64, 12);
+  ctx.fill();
+  ctx.strokeStyle = "#00ff88";
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "bold 28px Outfit, sans-serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(text, 128, 32);
+
+  const texture = new THREE.CanvasTexture(canvas);
+  const material = new THREE.SpriteMaterial({ map: texture, transparent: true });
+  const sprite = new THREE.Sprite(material);
+  sprite.scale.set(1.5, 0.375, 1);
+  return sprite;
+}
 
 function createWorldPath() {
   pathGroup.clear();
+  labelGroup.clear();
   const points = path.map(id => {
     const coords = campusCoords[id];
     return new THREE.Vector3(coords.x * 10, -1.6, coords.z * 10);
@@ -92,13 +121,24 @@ function createWorldPath() {
   const pathLine = new THREE.Mesh(tubeGeo, tubeMat);
   pathGroup.add(pathLine);
 
-  // Add glowing nodes
+  // Add glowing nodes and labels
   points.forEach((p, i) => {
+    const id = path[i];
     const nodeGeo = new THREE.SphereGeometry(0.15, 16, 16);
     const nodeMat = new THREE.MeshBasicMaterial({ color: i === index ? 0x00ff00 : 0xffffff });
     const node = new THREE.Mesh(nodeGeo, nodeMat);
     node.position.copy(p);
+    node.name = i === index ? "activeNode" : "node";
     pathGroup.add(node);
+
+    // Add labels for all block/location nodes
+    let labelText = id;
+    if (i === 0) labelText = "START";
+    if (i === path.length - 1) labelText = "FINISH";
+
+    const label = makeTextLabel(labelText);
+    label.position.set(p.x, p.y + 0.6, p.z);
+    labelGroup.add(label);
   });
 }
 
@@ -257,14 +297,7 @@ function drawMiniMap() {
     const x = sx(p.x);
     const y = 300 - sz(p.z);
 
-    if (
-      i === 0 ||
-      i === path.length - 1 ||
-      i === index ||
-      id.startsWith("B") ||
-      id.includes("HOSTEL") ||
-      id.includes("ADMIN")
-    ) {
+    {
       let label = id;
       if (i === 0) label = "START";
       else if (i === path.length - 1) label = "END";
@@ -330,6 +363,16 @@ renderer.domElement.addEventListener("click", nextStep);
 ================================ */
 function animate() {
   requestAnimationFrame(animate);
+
+  const time = Date.now() * 0.005;
+
+  // Pulse animation for active node
+  pathGroup.children.forEach(child => {
+    if (child.name === "activeNode") {
+      const s = 1 + Math.sin(time) * 0.2;
+      child.scale.set(s, s, s);
+    }
+  });
 
   // World-Space Viewport Logic
   const currentPos = campusCoords[current];

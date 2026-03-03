@@ -1,33 +1,56 @@
 export const campusCoords = {
-  ENTRY:{x:-4,z:2}, B8:{x:0,z:0}, B7:{x:2,z:0}, B6:{x:4,z:0},
-  B5:{x:6,z:0}, B4:{x:8,z:0}, B3:{x:10,z:0},
-  ADMIN_BLOCK:{x:10,z:2},
-  B1:{x:0,z:4}, B2:{x:2,z:4}, B9:{x:4,z:4},
-  B10:{x:6,z:4}, B11:{x:8,z:4}, B0:{x:10,z:4},
-  GIRLS_HOSTEL:{x:12,z:2}, BOYS_HOSTEL:{x:4,z:6},
-  R0:{x:-2,z:2}, R1:{x:-2,z:1}, R2:{x:-2,z:3},
-  R3:{x:0,z:1}, R4:{x:2,z:1}, R5:{x:4,z:1},
-  R6:{x:6,z:1}, R7:{x:8,z:1}, R8:{x:10,z:1},
-  R9:{x:10,z:3}, R10:{x:8,z:3}, R11:{x:6,z:3},
-  R12:{x:4,z:3}, R13:{x:2,z:3}, R14:{x:0,z:3},
-  R15:{x:0,z:2}, R16:{x:1,z:2}, R17:{x:3,z:2},
-  R18:{x:7,z:2}, R19:{x:10,z:2}, R20:{x:4,z:5},
-  R21:{x:11,z:2}
+  // Campus entry
+  ENTRY:    { x: -4, z: 2 },
+
+  // Top row (north side of campus road)
+  B8:       { x: 0,  z: 0 },
+  B7:       { x: 2,  z: 0 },
+  B6:       { x: 4,  z: 0 },
+  B5:       { x: 6,  z: 0 },
+  B4:       { x: 8,  z: 0 },
+  B3:       { x: 10, z: 0 },
+
+  // Admin / hostel area (east end)
+  ADMIN_BLOCK:  { x: 10, z: 2 },
+  GIRLS_HOSTEL: { x: 12, z: 2 },
+
+  // Bottom row (south side of campus road)
+  B1:       { x: 0,  z: 4 },
+  B2:       { x: 2,  z: 4 },
+  B9:       { x: 4,  z: 4 },
+  B10:      { x: 6,  z: 4 },
+  B11:      { x: 8,  z: 4 },
+  B0:       { x: 10, z: 4 },
+
+  // Boys hostel (south)
+  BOYS_HOSTEL: { x: 4, z: 6 }
 };
 
+// Block-only graph — blocks connected directly based on campus road adjacency
 export const campusGraph = {
-  ENTRY:["R0"], R0:["ENTRY","R1","R2"], R1:["R0","R3","R15"],
-  R2:["R0","R14","R15"], R3:["B8","R1","R4"],
-  R4:["B7","R3","R5"], R5:["B6","R4","R6"],
-  R6:["B5","R5","R7"], R7:["B4","R6","R8"],
-  R8:["B3","R7","R19"], R19:["ADMIN_BLOCK","R8","R9"],
-  R9:["B0","R10","R21"], R21:["GIRLS_HOSTEL","R9"],
-  R10:["B11","R9","R11"], R11:["B10","R10","R12"],
-  R12:["B9","R11","R13","R20"], R20:["BOYS_HOSTEL","R12"],
-  R13:["B2","R12","R14"], R14:["B1","R13","R2"],
-  B8:["R3"], B7:["R4"], B6:["R5"], B5:["R6"],
-  B4:["R7"], B3:["R8"], B0:["R9"],
-  B11:["R10"], B10:["R11"], B9:["R12"],
-  B2:["R13"], B1:["R14"],
-  ADMIN_BLOCK:["R19"], GIRLS_HOSTEL:["R21"], BOYS_HOSTEL:["R20"]
+  // Entry links to the first blocks on both rows
+  ENTRY:        ["B8", "B1"],
+
+  // Top row chain
+  B8:           ["ENTRY", "B7", "B1"],
+  B7:           ["B8", "B6", "B2"],
+  B6:           ["B7", "B5", "B9"],
+  B5:           ["B6", "B4", "B10"],
+  B4:           ["B5", "B3", "B11"],
+  B3:           ["B4", "ADMIN_BLOCK", "B0"],
+
+  // East end
+  ADMIN_BLOCK:  ["B3", "B0", "GIRLS_HOSTEL"],
+  GIRLS_HOSTEL: ["ADMIN_BLOCK"],
+
+  // Bottom row chain
+  B1:           ["ENTRY", "B8", "B2"],
+  B2:           ["B1", "B7", "B9"],
+  B9:           ["B2", "B6", "B10", "BOYS_HOSTEL"],
+  B10:          ["B9", "B5", "B11"],
+  B11:          ["B10", "B4", "B0"],
+  B0:           ["B11", "B3", "ADMIN_BLOCK"],
+
+  // Boys hostel off B9
+  BOYS_HOSTEL:  ["B9"]
 };

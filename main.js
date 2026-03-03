@@ -85,7 +85,7 @@ function addArrow(from, to) {
   arrows.add(arrow);
 }
 
-const path = ['ENTRY', 'R0', 'R3', 'R8', 'ADMIN_BLOCK'];
+const path = ['ENTRY', 'B8', 'B3', 'ADMIN_BLOCK'];
 let spawned = false;
 
 /* ======================
