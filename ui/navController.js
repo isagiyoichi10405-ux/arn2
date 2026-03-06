@@ -145,6 +145,45 @@ function createWorldPath() {
   });
 }
 
+/* ===============================
+   GROUND DIRECTIONAL ARROWS
+================================ */
+const groundArrowGroup = new THREE.Group();
+scene.add(groundArrowGroup);
+
+function createChevron() {
+  const shape = new THREE.Shape();
+  // Wider, sleeker chevron
+  shape.moveTo(-0.4, -0.2);
+  shape.lineTo(0, 0.2);
+  shape.lineTo(0.4, -0.2);
+  shape.lineTo(0.4, -0.4);
+  shape.lineTo(0, 0);
+  shape.lineTo(-0.4, -0.4);
+  shape.lineTo(-0.4, -0.2);
+
+  const geo = new THREE.ShapeGeometry(shape);
+  const mat = new THREE.MeshBasicMaterial({
+    color: 0x00ff88,
+    transparent: true,
+    opacity: 0.8,
+    side: THREE.DoubleSide
+  });
+
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.rotation.x = -Math.PI / 2; // Lay flat on ground
+  return mesh;
+}
+
+// Create sequence of 3 arrows for the "flow" effect
+const chevrons = [];
+for (let i = 0; i < 3; i++) {
+  const c = createChevron();
+  c.position.z = i * -1.2; // Spaced out
+  groundArrowGroup.add(c);
+  chevrons.push(c);
+}
+
 createWorldPath();
 
 scene.add(camera);
@@ -402,6 +441,38 @@ function animate() {
   }
 
   drawMiniMap();
+
+  // --- ANIMATE GROUND ARROWS ---
+  const nextNode = path[index + 1];
+
+  if (nextNode && !arrived) {
+    const nextPos = campusCoords[nextNode];
+    // Position at feet
+    groundArrowGroup.position.set(currentPos.x * 10, -1.55, currentPos.z * 10);
+
+    // Point toward next
+    const angleToNext = Math.atan2(
+      (nextPos.x - currentPos.x),
+      (nextPos.z - currentPos.z)
+    );
+    groundArrowGroup.rotation.y = angleToNext;
+
+    // Flow animation
+    chevrons.forEach((c, i) => {
+      // Move forward
+      c.position.z -= 0.03;
+      // Reset loop
+      if (c.position.z < -2.4) c.position.z = 1.2;
+
+      // Fade in/out based on distance
+      const dist = Math.abs(c.position.z);
+      c.material.opacity = Math.max(0, 0.8 - (dist / 3));
+    });
+    groundArrowGroup.visible = true;
+  } else {
+    groundArrowGroup.visible = false;
+  }
+
   renderer.render(scene, camera);
 }
 animate();
