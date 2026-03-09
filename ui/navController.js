@@ -287,7 +287,7 @@ function drawLabel(text, x, y, color = "#ffffff") {
    DRAW MINIMAP (CORRECT VERSION)
 ================================ */
 function drawMiniMap() {
-  ctx.clearRect(0, 0, 300, 300);
+  ctx.clearRect(0, 0, 150, 150);
 
   const nodes = path.map(id => campusCoords[id]);
   const xs = nodes.map(n => n.x);
@@ -337,7 +337,7 @@ function drawMiniMap() {
   path.forEach((id, i) => {
     const p = campusCoords[id];
     const x = sx(p.x);
-    const y = 300 - sz(p.z);
+    const y = 150 - sz(p.z);
 
     {
       let label = id;
@@ -350,7 +350,7 @@ function drawMiniMap() {
 
   /* ---- USER ORIENTATION ---- */
   const c = campusCoords[current];
-  drawUserArrow(sx(c.x), 300 - sz(c.z), THREE.MathUtils.degToRad(alphaHeading));
+  drawUserArrow(sx(c.x), 150 - sz(c.z), THREE.MathUtils.degToRad(alphaHeading));
 }
 
 /* ===============================
@@ -459,14 +459,14 @@ function animate() {
 
     // Flow animation
     chevrons.forEach((c, i) => {
-      // Move forward
-      c.position.z -= 0.03;
-      // Reset loop
-      if (c.position.z < -2.4) c.position.z = 1.2;
+      // Move forward (+Z) toward destination
+      c.position.z += 0.03;
+      // Reset loop (once it passes the "front")
+      if (c.position.z > 0.6) c.position.z = -3.0;
 
-      // Fade in/out based on distance
+      // Fade in/out based on distance from base
       const dist = Math.abs(c.position.z);
-      c.material.opacity = Math.max(0, 0.8 - (dist / 3));
+      c.material.opacity = Math.max(0, 0.8 - (dist / 4));
     });
     groundArrowGroup.visible = true;
   } else {
