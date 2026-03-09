@@ -110,90 +110,101 @@ quickChips.forEach(chip => {
   };
 });
 
-const overlay = document.getElementById("path-preview-overlay");
-const canvas = document.getElementById("path-preview-canvas");
-const ctx = canvas.getContext("2d");
+const previewOverlay = document.getElementById("path-preview-overlay");
+const previewContainer = document.getElementById("path-preview-3d-container");
 
-function drawPathAnimation(path, callback) {
-  overlay.classList.remove("hidden");
+function draw3DPathAnimation(pathData, callback) {
+  previewOverlay.classList.remove("hidden");
 
-  // Set canvas size
-  canvas.width = 320;
-  canvas.height = 320;
+  // THREE.JS SCENE SETUP
+  const scene3D = new THREE.Scene();
+  const camera3D = new THREE.PerspectiveCamera(45, 1, 0.1, 1000);
+  const renderer3D = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+  renderer3D.setSize(320, 320);
+  previewContainer.appendChild(renderer3D.domElement);
 
-  const nodes = path.map(id => campusCoords[id]);
-  const xs = nodes.map(n => n.x);
-  const zs = nodes.map(n => n.z);
+  // Lighting
+  const ambient = new THREE.AmbientLight(0xffffff, 0.5);
+  const point = new THREE.PointLight(0x00f2ff, 1);
+  point.position.set(0, 10, 10);
+  scene3D.add(ambient, point);
 
-  const minX = Math.min(...xs), maxX = Math.max(...xs);
-  const minZ = Math.min(...zs), maxZ = Math.max(...zs);
+  // Load Model
+  const loader = new THREE.GLTFLoader();
+  let campusModel = null;
 
-  // Normalize mapping (fit path into 260px area with 30px padding)
-  const pad = 30;
-  const sx = x => ((x - minX) / (Math.max(1, maxX - minX))) * 260 + pad;
-  const sz = z => ((z - minZ) / (Math.max(1, maxZ - minZ))) * 260 + pad;
+  loader.load("./models/campus.glb", (gltf) => {
+    campusModel = gltf.scene;
+    // Scale down for mini-view
+    campusModel.scale.set(0.2, 0.2, 0.2);
+    campusModel.rotation.y = -Math.PI / 4;
+    scene3D.add(campusModel);
 
-  let currentStep = 0;
+    startPathGrowth();
+  });
+
+  camera3D.position.set(0, 12, 12);
+  camera3D.lookAt(0, 0, 0);
+
+  // PATH GROWTH LOGIC
+  const points = pathData.map(id => {
+    const coords = campusCoords[id];
+    // Scale coords down to match mini-model scale (0.2)
+    return new THREE.Vector3(coords.x * 10 * 0.2, 0.1, coords.z * 10 * 0.2);
+  });
+
   let progress = 0;
+  let pathGroup = new THREE.Group();
+  scene3D.add(pathGroup);
 
-  function animate() {
-    ctx.clearRect(0, 0, 320, 320);
+  function startPathGrowth() {
+    function animate() {
+      if (progress < 1) {
+        progress += 0.02; // Speed of growth
 
-    // Draw background grid (blueprint feel)
-    ctx.strokeStyle = "rgba(0, 242, 255, 0.05)";
-    ctx.lineWidth = 1;
-    for (let i = 0; i < 320; i += 20) {
-      ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, 320); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(320, i); ctx.stroke();
-    }
+        pathGroup.clear();
 
-    // Draw lines already completed
-    ctx.strokeStyle = "#00f2ff";
-    ctx.lineWidth = 4;
-    ctx.lineCap = "round";
-    ctx.shadowBlur = 10;
-    ctx.shadowColor = "#00f2ff";
+        // Use a subset of points based on progress
+        const segmentCount = Math.floor(points.length * progress);
+        if (segmentCount > 1) {
+          const activePoints = points.slice(0, segmentCount);
 
-    ctx.beginPath();
-    for (let i = 0; i < currentStep; i++) {
-      const p1 = nodes[i];
-      const p2 = nodes[i + 1];
-      ctx.moveTo(sx(p1.x), sz(p1.z));
-      ctx.lineTo(sx(p2.x), sz(p2.z));
-    }
-    ctx.stroke();
+          // Smoother path tube
+          const curve = new THREE.CatmullRomCurve3(activePoints);
+          const tubeGeo = new THREE.TubeGeometry(curve, activePoints.length * 5, 0.08, 8, false);
+          const tubeMat = new THREE.MeshBasicMaterial({
+            color: 0x00ff88,
+            transparent: true,
+            opacity: 0.9
+          });
+          const pathTube = new THREE.Mesh(tubeGeo, tubeMat);
+          pathGroup.add(pathTube);
 
-    // Draw current segment
-    if (currentStep < nodes.length - 1) {
-      const p1 = nodes[currentStep];
-      const p2 = nodes[currentStep + 1];
-      const tx = sx(p1.x) + (sx(p2.x) - sx(p1.x)) * progress;
-      const tz = sz(p1.z) + (sz(p2.z) - sz(p1.z)) * progress;
+          // Glowing end point
+          const endGeo = new THREE.SphereGeometry(0.15, 12, 12);
+          const endMat = new THREE.MeshBasicMaterial({ color: 0x00ff88 });
+          const endNode = new THREE.Mesh(endGeo, endMat);
+          endNode.position.copy(points[segmentCount - 1]);
+          pathGroup.add(endNode);
+        }
 
-      ctx.beginPath();
-      ctx.moveTo(sx(p1.x), sz(p1.z));
-      ctx.lineTo(tx, tz);
-      ctx.stroke();
+        // Camera Orbit
+        camera3D.position.x = 12 * Math.sin(Date.now() * 0.0005);
+        camera3D.position.z = 12 * Math.cos(Date.now() * 0.0005);
+        camera3D.lookAt(0, 0, 0);
 
-      progress += 0.1; // Speed of lines
-      if (progress >= 1) {
-        progress = 0;
-        currentStep++;
+        renderer3D.render(scene3D, camera3D);
+        requestAnimationFrame(animate);
+      } else {
+        // Finalized
+        setTimeout(() => {
+          previewContainer.removeChild(renderer3D.domElement);
+          callback();
+        }, 1000);
       }
-      requestAnimationFrame(animate);
-    } else {
-      // Done - draw nodes
-      nodes.forEach((n, i) => {
-        ctx.fillStyle = (i === 0) ? "#00ff88" : (i === nodes.length - 1) ? "#ff3333" : "#ffffff";
-        ctx.beginPath();
-        ctx.arc(sx(n.x), sz(n.z), 5, 0, Math.PI * 2);
-        ctx.fill();
-      });
-      setTimeout(callback, 800);
     }
+    animate();
   }
-
-  animate();
 }
 
 startBtn.onclick = () => {
@@ -230,7 +241,7 @@ startBtn.onclick = () => {
   appUI.classList.add("fade-out");
 
   setTimeout(() => {
-    drawPathAnimation(path, () => {
+    draw3DPathAnimation(path, () => {
       window.location.href = "nav.html";
     });
   }, 500);
