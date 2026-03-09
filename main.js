@@ -57,7 +57,7 @@ new THREEx.ArMarkerControls(arContext, markerRoot, {
    LOAD CAMPUS MODEL
 ====================== */
 const loader = new THREE.GLTFLoader();
-loader.load('./models/campus.glb', (gltf) => {
+loader.load('./models/campus_model.glb', (gltf) => {
   const campus = gltf.scene;
   campus.position.set(0, 0, 0);
   campus.scale.set(1, 1, 1); // already meters

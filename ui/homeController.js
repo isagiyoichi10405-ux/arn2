@@ -133,13 +133,16 @@ function draw3DPathAnimation(pathData, callback) {
   const loader = new THREE.GLTFLoader();
   let campusModel = null;
 
-  loader.load("./models/campus.glb", (gltf) => {
+  loader.load("./models/campus_model.glb", (gltf) => {
     campusModel = gltf.scene;
     // Scale down for mini-view
     campusModel.scale.set(0.2, 0.2, 0.2);
     campusModel.rotation.y = -Math.PI / 4;
     scene3D.add(campusModel);
 
+    startPathGrowth();
+  }, undefined, (err) => {
+    console.error("3D Preview Model Load Error:", err);
     startPathGrowth();
   });
 
